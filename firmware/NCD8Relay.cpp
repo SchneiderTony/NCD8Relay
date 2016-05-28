@@ -438,6 +438,69 @@ readBankOneRetry:
     }
     
 }
+//-------------------------------------------
+
+int NCD8Relay::readInputStatus(int input){
+    if(input > 7 || input < 0){
+        return 256;
+    }
+    int value = 0;
+    switch(input){
+        case 1:
+            value = 2;
+            break;
+        case 2:
+            value = 4;
+            break;
+        case 3:
+            value = 8;
+            break;
+        case 4:
+            value = 16;
+            break;
+        case 5:
+        	value = 32;
+        	break;
+        case 6:
+        	value = 64;
+        	break;
+        case 7:
+        	value = 128;
+        	break;
+
+    }
+    getGPIOStatusRetry:
+    Wire.beginTransmission(address);
+    Wire.write(0x09);
+    byte status = Wire.endTransmission();
+    if(status != 0){
+        if(retrys < 3){
+    #ifdef LOGGING
+            Serial.println("Retry read input status command");
+    #endif
+            retrys++;
+            goto getGPIOStatusRetry;
+        }else{
+    #ifdef LOGGING
+            Serial.println("Read input status command failed");
+    #endif
+            initialized = false;
+            retrys = 0;
+            return 256;
+        }
+    }else{
+        retrys = 0;
+        initialized = true;
+    }
+    Wire.requestFrom(address, 1);
+    byte bankStatus = Wire.read();
+    byte inverted = ~bankStatus;
+    if((inverted & value) == value){
+        return 1;
+    }else{
+        return 0;
+    }
+}
 
 int NCD8Relay::readAllInputs(){
     readInputStatusRetry:
