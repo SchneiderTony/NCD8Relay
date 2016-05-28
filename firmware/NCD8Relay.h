@@ -24,6 +24,10 @@ public:
     int readRelayStatus(int relay);
     //Read status of all relays in bank.  0-255 valid.  256 returned on error
     int readRelayBankStatus();
+    //
+    int readInputStatus(int input);
+    //Read status of all inputs
+    int readAllInputs();
     
     //User Accessible Variables
     //Whether or not the controller is ready to accept commands
