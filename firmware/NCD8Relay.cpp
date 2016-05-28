@@ -438,3 +438,34 @@ readBankOneRetry:
     }
     
 }
+
+int NCD8Relay::readAllInputs(){
+    readInputStatusRetry:
+    Wire.beginTransmission(address);
+    Wire.write(0x09);
+    byte status = Wire.endTransmission();
+    if(status != 0){
+        if(retrys < 3){
+    #ifdef LOGGING
+            Serial.println("Retry read bank status command");
+    #endif
+            retrys++;
+            goto readInputStatusRetry;
+        }else{
+    #ifdef LOGGING
+            Serial.println("Read bank status command failed");
+    #endif
+            initialized = false;
+            retrys = 0;
+            return 256;
+        }
+    }else{
+        retrys = 0;
+        initialized = true;
+    }
+    Wire.requestFrom(address, 1);
+    byte bankStatus = Wire.read();
+    byte inverted = ~bankStatus;
+    byte shifted = inverted >> 1;
+    return shifted;
+}
